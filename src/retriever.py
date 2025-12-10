@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.config import CHROMA_DB_PATH, SENTENCE_TRANSFORMER_MODEL
 
 
-class WiliRetriever:
+class WikiRetriever:
     """
     A retriever class that interfaces with ChromaDB to fetch relevant Wikipedia chunks.
     """

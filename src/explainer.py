@@ -161,17 +161,12 @@ Strictly output a JSON object with this structure. Ensure "thought_process" is t
 """
 
         try:
-            response = self.model.generate_content(prompt)
+            # Force JSON output from Gemini
+            response = self.model.generate_content(
+                prompt,
+                generation_config={"response_mime_type": "application/json"}
+            )
             response_text = response.text.strip()
-
-            # Clean up response
-            if response_text.startswith("```json"):
-                response_text = response_text[7:]
-            if response_text.startswith("```"):
-                response_text = response_text[3:]
-            if response_text.endswith("```"):
-                response_text = response_text[:-3]
-            response_text = response_text.strip()
 
             result = json.loads(response_text)
 
@@ -183,12 +178,12 @@ Strictly output a JSON object with this structure. Ensure "thought_process" is t
 
         except json.JSONDecodeError as e:
             print(f"Failed to parse JSON response: {e}")
-            return {
-                "display_status": f"Analysis Complete - {classification}",
-                "explanation": response.text if 'response' in locals() else "Unable to generate explanation.",
-                "key_flags": ["Analysis completed but response parsing failed"],
-                "claim_analysis": []
-            }
+            print(f"Raw response (first 500 chars): {response_text[:500] if 'response_text' in locals() else 'N/A'}")
+            # Fall back to simple explanation
+            return self._generate_simple_explanation(
+                classification, confidence, claims,
+                wikipedia_evidence, fact_check_results
+            )
         
     def _format_evidence_for_prompt(
         self,

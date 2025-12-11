@@ -438,6 +438,17 @@ def main():
     # Analysis Result (from Explainer)
     st.markdown('<div class="section-header">📊 Analysis Result</div>', unsafe_allow_html=True)
 
+    # Ensure explanation is a dict (handle edge cases where it might be a string)
+    if isinstance(explanation, str):
+        try:
+            explanation = json.loads(explanation)
+        except:
+            explanation = {
+                "display_status": "Error",
+                "explanation": explanation,
+                "key_flags": []
+            }
+
     # Extract fields (excluding thought_process which is internal)
     display_status = explanation.get('display_status', 'Analysis Complete')
     explanation_text = explanation.get('explanation', '')

@@ -25,9 +25,9 @@ import nltk
 from nltk.tokenize import sent_tokenize
 
 try:
-    nltk.data.find('tokenizers/punkt')
+    nltk.data.find('tokenizers/punkt_tab')
 except LookupError:
-    nltk.download('punkt')
+    nltk.download('punkt_tab')
 
 load_dotenv()
 

@@ -15,7 +15,7 @@ from .explainer import LLMExplainer
 from .extractor import ClaimExtractor
 from .extractor_claimify import ClaimifyExtractor
 from .retriever import WikiRetriever
-from .factchecker import FactChecker
+# from .factchecker import FactChecker
 
 __all__ = [
     # Classification

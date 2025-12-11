@@ -113,55 +113,52 @@ class LLMExplainer:
             claims, wikipedia_evidence, fact_check_results
         )
 
-        prompt = f"""You are a professional Fact-Checking Assistant helping users understand news credibility.
+        # Determine detector label string
+        detector_label_str = "Potentially Fake" if classification == "FAKE" else "Likely Real"
 
-    ## Task
-    Analyze the news article below and provide a clear, educational explanation of its credibility.
+        prompt = f"""Role: You are a professional Fact-Checker.
+Your goal is to determine the factual accuracy of the news article below for a confused reader.
 
-    ## Article Information
-    **Title:** {title}
-    **Classification:** {classification} (Confidence: {confidence:.1%})
+Input Data:
+1. Automated Alert: **{detector_label_str}** (Confidence: {confidence:.2f}).
+   (Treat this as a lead, but verify it against the evidence.)
+2. Independent Evidence is provided below.
 
-    **Article Text:**
-    {text[:2000]}{"..." if len(text) > 2000 else ""}
+---
+ARTICLE TITLE: {title}
 
-    ## Evidence Gathered
-    {evidence_section}
+ARTICLE TEXT:
+\"\"\"
+{text}
+\"\"\"
+---
+{evidence_section}
+---
 
-    ## Instructions
-    Based on the classification result and the evidence gathered:
+INSTRUCTIONS:
+1. **Analyze First**: Look at the "Claims" vs. "Independent Evidence".
+2. **Determine Validity**: Does the evidence support or contradict the text?
+3. **Formulate Output**: Write the response for the user.
 
-    1. **Evaluate** the article's credibility considering:
-    - The AI classifier's assessment
-    - Whether extracted claims are supported by Wikipedia
-    - Whether any claims have been fact-checked by independent organizations
-
-    2. **Explain** your reasoning in a way that helps the reader understand:
-    - Why this article might be classified as {classification}
-    - Which specific claims are problematic or well-supported
-    - What sources support or contradict the claims
-
-    3. **Provide** actionable guidance for the reader.
-
-    ## Output Format
-    Respond in this exact JSON format (no markdown code blocks):
-    {{
-        "display_status": "Brief 2-5 word headline (e.g., 'Likely Misinformation' or 'Appears Credible')",
-        "explanation": "2-4 sentences explaining the overall assessment. Be specific about which claims are problematic and why. Reference the evidence when possible.",
-        "key_flags": [
-            "Specific indicator 1 (e.g., 'Claim about X contradicts Wikipedia source')",
-            "Specific indicator 2 (e.g., 'No fact-checks found for main claims')",
-            "Specific indicator 3 (e.g., 'Statistics not verifiable')"
-        ],
-        "claim_analysis": [
-            {{
-                "claim": "The specific claim text",
-                "status": "supported / contradicted / unverified / partially_true",
-                "evidence_summary": "Brief explanation of what evidence shows"
-            }}
-        ]
-    }}
-    """
+OUTPUT FORMAT (JSON):
+Strictly output a JSON object with this structure. Ensure "thought_process" is the FIRST key.
+{{
+    "thought_process": "Step-by-step reasoning. 1. Checked claim X against evidence Y. 2. Noted contradiction...",
+    "display_status": "Short Verdict (e.g., 'False', 'Verified', 'Satire', 'Opinion')",
+    "explanation": "2-3 clear sentences for the user (ignoring the thought process). Quote the evidence directly.",
+    "key_flags": [
+        "Bullet 1: Specific contradiction or confirmation",
+        "Bullet 2: Tone analysis or other flag"
+    ],
+    "claim_analysis": [
+        {{
+            "claim": "The specific claim text",
+            "status": "supported / contradicted / unverified / partially_true",
+            "evidence_summary": "Brief explanation of what evidence shows"
+        }}
+    ]
+}}
+"""
 
         try:
             response = self.model.generate_content(prompt)

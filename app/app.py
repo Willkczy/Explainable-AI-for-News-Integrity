@@ -142,20 +142,24 @@ def load_retriever():
         return None
 
 @st.cache_resource
-def load_simple_extractor():
+def load_simple_extractor(api_key: str = None):
     """Load and cache the simple claim extractor."""
     try:
+        if api_key:
+            return ClaimExtractor(api_key=api_key)
         return ClaimExtractor()
     except Exception as e:
         st.warning(f"Failed to load simple extractor: {e}")
         return None
 
 @st.cache_resource
-def load_claimify_extractor():
+def load_claimify_extractor(api_key: str = None):
     """Load and cache the Claimify claim extractor."""
     if not CLAIMIFY_AVAILABLE:
         return None
     try:
+        if api_key:
+            return ClaimifyExtractor(api_key=api_key)
         return ClaimifyExtractor()
     except Exception as e:
         st.warning(f"Failed to load Claimify extractor: {e}")
@@ -185,14 +189,21 @@ def main():
         
         # API Keys Section
         st.subheader("API Keys")
-        
+
         gemini_key = st.text_input(
             "Gemini API Key",
             type="password",
             value=os.getenv("GEMINI_API_KEY", ""),
             help="For AI-powered explanations"
         )
-        
+
+        groq_key = st.text_input(
+            "Groq API Key",
+            type="password",
+            value=os.getenv("GROQ_API_KEY", ""),
+            help="For claim extraction using Llama models"
+        )
+
         factcheck_key = st.text_input(
             "Google Fact Check API Key",
             type="password",
@@ -251,6 +262,7 @@ def main():
             ("Classifier", detector is not None),
             ("WikiDB", retriever is not None),
             ("Gemini API", bool(gemini_key)),
+            ("Groq API", bool(groq_key)),
             ("Fact Check API", bool(factcheck_key)),
             ("Claimify", CLAIMIFY_AVAILABLE)
         ]
@@ -326,24 +338,29 @@ def main():
         # Step 2: Claim Extraction
         # ----------------------------------------------------------------------
         status_text.text("🔄 Step 2/5: Extracting claims...")
-        
+
         claims = []
-        
+
         if extractor_mode == "simple":
-            extractor = load_simple_extractor()
+            # Load cached extractor (with or without API key)
+            extractor = load_simple_extractor(api_key=groq_key if groq_key else None)
             if extractor:
-                claims = extractor.extract_claims(text)
+                # Use extract() method with max_claims limit
+                rich_claims = extractor.extract(text, max_claims=5)
+                claims = [c.text for c in rich_claims]
         else:
-            extractor = load_claimify_extractor()
+            # Load cached Claimify extractor (with or without API key)
+            extractor = load_claimify_extractor(api_key=groq_key if groq_key else None)
             if extractor:
                 result = extractor.extract(
                     text,
+                    max_claims=5,
                     max_sentences=max_sentences,
                     use_prefilter=True,
                     verbose=False
                 )
                 claims = result.claims
-        
+
         results['claims'] = claims
         progress_bar.progress(40)
         

@@ -485,11 +485,18 @@ class ClaimifyExtractor:
             return []
         
         claims = result.get("claims", [])
-        
-        # Ensure we have a list of strings
+
+        # Ensure we have a list of strings (flatten if nested)
         if isinstance(claims, list):
-            return [str(c) for c in claims if c]
-        
+            flattened = []
+            for c in claims:
+                if isinstance(c, list):
+                    # Flatten nested lists
+                    flattened.extend([str(item) for item in c if item])
+                elif c:
+                    flattened.append(str(c))
+            return flattened
+
         return []
     
     def _process_single_sentence(

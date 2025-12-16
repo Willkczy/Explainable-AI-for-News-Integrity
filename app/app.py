@@ -555,12 +555,24 @@ def main():
                             "ERROR": "❌"
                         }.get(rating, "❓")
 
+                        # Extract just the verdict summary (first line before evidence details)
+                        if '\n\nEvidence from sources:' in fc_explanation:
+                            summary = fc_explanation.split('\n\nEvidence from sources:')[0]
+                            full_explanation = fc_explanation
+                        else:
+                            summary = fc_explanation
+                            full_explanation = fc_explanation
+
                         st.markdown(f"""
                         <div class="factcheck-card">
                             <strong>{verdict_icon} {publisher}</strong>: {rating}<br>
-                            <span style="color: #666;">{fc_explanation}</span>
+                            <span style="color: #666;">{summary}</span>
                         </div>
                         """, unsafe_allow_html=True)
+
+                        # Show detailed explanation in an expander
+                        with st.expander("📖 View detailed reasoning", expanded=False):
+                            st.markdown(full_explanation)
 
                         # Show sources as simple clickable links
                         if sources:

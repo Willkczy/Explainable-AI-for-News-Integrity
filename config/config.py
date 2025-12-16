@@ -37,6 +37,19 @@ DETECTOR_MODEL_PATH = os.getenv("DETECTOR_MODEL_PATH", "./models/checkpoint_robe
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./data/chroma_db_wiki")
 CHROMA_COLLECTION_NAME = "wiki_knowledge"
 
+# =============================================================================
+# Vector Database (PostgreSQL + pgvector) - Cloud SQL
+# =============================================================================
+
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "")
+POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", "5432"))
+POSTGRES_DB = os.getenv("POSTGRES_DB", "wikidb")
+POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "")
+
+# Use PostgreSQL instead of ChromaDB
+USE_POSTGRES = os.getenv("USE_POSTGRES", "true").lower() == "true"
+
 # Sentence Transformer Model for Embeddings
 SENTENCE_TRANSFORMER_MODEL = "all-MiniLM-L6-v2"
 

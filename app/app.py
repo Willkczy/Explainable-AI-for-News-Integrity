@@ -133,7 +133,15 @@ def load_detector():
 def load_retriever():
     """Load and cache the Wikipedia retriever."""
     try:
-        return WikiRetriever()
+        from config.config import USE_POSTGRES
+        
+        if USE_POSTGRES:
+            # Use PostgreSQL retriever
+            from src.retriever_pg import WikiRetrieverPG
+            return WikiRetrieverPG()
+        else:
+            # Use ChromaDB retriever (legacy)
+            return WikiRetriever()
     except FileNotFoundError as e:
         st.warning(f"WikiDB not found: {e}")
         return None

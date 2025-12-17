@@ -32,11 +32,17 @@ PERPLEXITY_MODEL = "llama-3.1-sonar-small-128k-online"
 
 # Fake News Detector (RoBERTa)
 DETECTOR_MODEL_NAME = "roberta-base"
-DETECTOR_MODEL_PATH = os.getenv("DETECTOR_MODEL_PATH", "./models/checkpoint_roberta")
 
-# GCS Model Path (for Cloud Run deployment)
-GCS_MODEL_BUCKET = os.getenv("GCS_MODEL_BUCKET", "news-integrity-assets")
-GCS_MODEL_PATH = os.getenv("GCS_MODEL_PATH", "models/checkpoint_roberta")
+# Auto-detect Cloud Run environment and use appropriate model path
+# Cloud Run sets K_SERVICE environment variable
+def _get_default_model_path():
+    """Return model path based on environment (Cloud Run vs local)"""
+    if os.getenv("K_SERVICE"):  # Running in Cloud Run
+        return "/mnt/gcs/models/checkpoint_roberta"
+    else:  # Local development
+        return "./models/checkpoint_roberta"
+
+DETECTOR_MODEL_PATH = os.getenv("DETECTOR_MODEL_PATH", _get_default_model_path())
 
 # =============================================================================
 # Vector Database (ChromaDB)

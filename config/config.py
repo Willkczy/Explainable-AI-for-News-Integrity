@@ -34,6 +34,10 @@ PERPLEXITY_MODEL = "llama-3.1-sonar-small-128k-online"
 DETECTOR_MODEL_NAME = "roberta-base"
 DETECTOR_MODEL_PATH = os.getenv("DETECTOR_MODEL_PATH", "./models/checkpoint_roberta")
 
+# GCS Model Path (for Cloud Run deployment)
+GCS_MODEL_BUCKET = os.getenv("GCS_MODEL_BUCKET", "news-integrity-assets")
+GCS_MODEL_PATH = os.getenv("GCS_MODEL_PATH", "models/checkpoint_roberta")
+
 # =============================================================================
 # Vector Database (ChromaDB)
 # =============================================================================

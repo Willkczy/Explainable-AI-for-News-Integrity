@@ -67,6 +67,16 @@ USE_POSTGRES = os.getenv("USE_POSTGRES", "true").lower() == "true"
 # Sentence Transformer Model for Embeddings
 SENTENCE_TRANSFORMER_MODEL = "all-MiniLM-L6-v2"
 
+# Sentence Transformer model path (local or GCS mounted)
+def _get_sentence_transformer_path():
+    """Return sentence transformer path based on environment (Cloud Run vs local)"""
+    if os.getenv("K_SERVICE"):  # Running in Cloud Run
+        return "/mnt/gcs/models/all-MiniLM-L6-v2"
+    else:  # Local development - use model name to download from HuggingFace
+        return "sentence-transformers/all-MiniLM-L6-v2"
+
+SENTENCE_TRANSFORMER_PATH = os.getenv("SENTENCE_TRANSFORMER_PATH", _get_sentence_transformer_path())
+
 # =============================================================================
 # Cloud Configuration (for future Cloud Run deployment)
 # =============================================================================

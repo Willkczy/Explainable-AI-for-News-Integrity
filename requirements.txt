@@ -17,6 +17,10 @@ perplexityai>=0.1.0
 # Vector Database
 chromadb>=0.4.22
 
+# PostgreSQL + pgvector (for Cloud SQL retriever)
+psycopg2-binary>=2.9.9
+pgvector>=0.2.3
+
 # Data Processing
 pandas>=2.0.0
 numpy>=1.24.0

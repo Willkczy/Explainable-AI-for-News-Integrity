@@ -57,11 +57,12 @@ Final Verdict with Sources
 - **Model**: Groq API (Llama 3.1 8B Instant)
 - **Mode**: Claimify (3-stage pipeline for higher quality)
 - **Stages**:
-  1. **Prefilter**: Identifies check-worthy sentences
-  2. **Extraction**: Extracts claims from filtered sentences
-  3. **Deduplication**: Removes redundant claims
+  1. **Selection**: Filters sentences with verifiable content
+  2. **Disambiguation**: Resolves referential and structural ambiguity
+  3. **Decomposition**: Extracts atomic factual claims
+- **Features**: Optional prefiltering step before 3-stage pipeline
 - **Configuration**: Adjustable max_sentences and max_claims
-- **Returns**: `ExtractionResult` with claims and metadata
+- **Returns**: `ClaimifyResult` with claims and statistics
 
 #### [src/retriever.py](src/retriever.py) - ChromaDB Retrieval
 - **Class**: `WikiRetriever`
@@ -175,13 +176,14 @@ Explainable-AI-for-News-Integrity/
 │   ├── extractor_claimify.py              # ClaimifyExtractor (3-stage)
 │   ├── retriever.py                        # WikiRetriever (ChromaDB)
 │   ├── retriever_pg.py                     # WikiRetrieverPG (PostgreSQL)
-│   └── perplexity_fact_checker.py         # PerplexityFactChecker
+│   ├── perplexity_fact_checker.py         # PerplexityFactChecker
+│   └── test_claimify_detailed.py         # Claimify extractor tests
 ├── config/
 │   └── config.py                           # Environment-aware configuration
 ├── notebooks/                              # Development & analysis
 │   ├── Big_data_WikiDB.ipynb              # Wikipedia ETL pipeline
 │   ├── fake_news_classification.ipynb     # Model training
-│   └── EDA_and_preprocessing.ipynb        # Data exploration
+│   └── fake_news_EDA&Preprocessing.ipynb  # Data exploration
 ├── data/                                   # Local data (gitignored)
 │   └── chroma_db_wiki/                     # ChromaDB vector store
 ├── models/                                 # Trained models (gitignored)

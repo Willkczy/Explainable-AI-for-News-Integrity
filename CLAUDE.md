@@ -97,7 +97,7 @@ from src import FakeNewsDetector, LLMExplainer, ClaimExtractor, WikiRetriever, e
 
 **Claim Extraction**: Two modes selectable at runtime
 - **Simple** (src/extractor.py): Single prompt, fast, good for most articles
-- **Claimify** (src/extractor_claimify.py): 3-stage pipeline (prefilter → extract → deduplicate) for higher quality
+- **Claimify** (src/extractor_claimify.py): 3-stage pipeline (selection → disambiguation → decomposition) with optional prefiltering for higher quality
 
 **Evidence Retrieval**: Two implementations with same interface
 - **ChromaDB** (src/retriever.py): Local vector database, used in development
@@ -171,7 +171,7 @@ result = explainer.generate_explanation(
 
 ### Explanation Output Structure
 LLMExplainer returns dict with:
-- `display_status`: Verdict string (False, Misleading, Unverified, Partially Verified, Verified)
+- `display_status`: Verdict string (False, Misleading, Unsubstantiated, Partially Verified, Unverified, Largely Accurate, Verified, Highly Credible)
 - `explanation`: Detailed reasoning text
 - `key_flags`: List of important indicators
 - `claim_analysis`: Per-claim verification status (Supported/Contradicted/Unverified)

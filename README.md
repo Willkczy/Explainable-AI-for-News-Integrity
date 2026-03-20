@@ -56,20 +56,27 @@ Explainable-AI-for-News-Integrity/
 │   ├── extractor_claimify.py   # ClaimifyExtractor (3-stage pipeline)
 │   ├── retriever.py            # WikiRetriever (ChromaDB)
 │   ├── retriever_pg.py         # WikiRetrieverPG (PostgreSQL + pgvector)
-│   └── perplexity_fact_checker.py  # PerplexityFactChecker (AI-powered)
+│   ├── perplexity_fact_checker.py  # PerplexityFactChecker (AI-powered)
+│   └── test_claimify_detailed.py  # Claimify extractor tests
 ├── config/                     # Configuration management
 │   └── config.py               # Centralized configuration
 ├── notebooks/                  # Jupyter notebooks
 │   ├── Big_data_WikiDB.ipynb   # Wikipedia ETL pipeline
 │   ├── fake_news_classification.ipynb  # Model training
-│   └── EDA_and_preprocessing.ipynb     # Data exploration
+│   └── fake_news_EDA&Preprocessing.ipynb  # Data exploration
 ├── data/                       # Data files (not in git)
 │   └── chroma_db_wiki/         # Vector database
 ├── models/                     # Trained models (not in git)
 │   └── checkpoint_roberta/     # Fine-tuned RoBERTa model
+├── .github/                    # GitHub issue templates
 ├── .env.example                # Environment variables template
+├── Dockerfile                  # Cloud Run containerization
+├── pyproject.toml              # uv project config
 ├── run.py                      # Application launcher script
-└── requirements.txt            # Python dependencies
+├── requirements.txt            # Python dependencies
+├── ARCHITECTURE.md             # System architecture details
+├── CONTRIBUTING.md             # Development guidelines
+└── PERPLEXITY_SETUP.md         # Perplexity API setup guide
 ```
 
 ## 🚀 Getting Started
@@ -139,11 +146,20 @@ python src/classifier.py
 # Test LLM explainer
 python src/explainer.py
 
-# Test claim extractor
+# Test simple claim extractor
 python src/extractor.py
 
-# Test Wikipedia retriever
+# Test 3-stage claim extractor
+python src/extractor_claimify.py
+
+# Test ChromaDB retriever
 python src/retriever.py
+
+# Test PostgreSQL retriever
+python src/retriever_pg.py
+
+# Test Perplexity fact-checking
+python src/perplexity_fact_checker.py
 ```
 
 ## 📖 Usage

@@ -171,7 +171,7 @@ Closes #<issue-number>
 ## 🏗️ Development Setup
 ```bash
 # Clone repo
-git clone https://github.com/Jack1021ohoh/Explainable-AI-for-News-Integrity.git
+git clone https://github.com/Willkczy/Explainable-AI-for-News-Integrity.git
 cd Explainable-AI-for-News-Integrity
 
 # Install dependencies

@@ -95,7 +95,7 @@ Explainable-AI-for-News-Integrity/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Jack1021ohoh/Explainable-AI-for-News-Integrity.git
+git clone https://github.com/Willkczy/Explainable-AI-for-News-Integrity.git
 cd Explainable-AI-for-News-Integrity
 
 # 2. Install dependencies
@@ -310,7 +310,8 @@ This project is for educational purposes.
 
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/Jack1021ohoh/Explainable-AI-for-News-Integrity)
+- [GitHub Repository](https://github.com/Willkczy/Explainable-AI-for-News-Integrity)
+- [Original Upstream Repository](https://github.com/Jack1021ohoh/Explainable-AI-for-News-Integrity)
 - **API Documentation**:
   - [Google Gemini API](https://aistudio.google.com/app/apikey)
   - [Groq API](https://console.groq.com/docs/quickstart)

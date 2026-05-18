@@ -26,7 +26,7 @@ The Perplexity Search API has been integrated into your News Integrity applicati
 ### 1. Install Perplexity SDK
 
 ```bash
-pip install perplexity-sdk
+pip install perplexityai
 ```
 
 ### 2. Get Perplexity API Key
@@ -71,7 +71,7 @@ client = Perplexity(api_key="your-api-key")
 # Search for fact-check information
 search_results = client.search.create(
     query=f"Is this claim true or false? Fact-check: {claim}",
-    max_results=5,
+    max_results=2,
     max_tokens_per_page=1024
 )
 
@@ -128,7 +128,7 @@ Claim: ❌ FALSE
 The fact checker:
 
 1. **Searches** - Uses Perplexity Search API to find relevant web pages
-2. **Extracts** - Gets titles, URLs, and snippets from top 5 results
+2. **Extracts** - Gets titles, URLs, and snippets from top 2 results
 3. **Analyzes** - Examines text for keywords indicating truth/falsehood:
    - **FALSE indicators**: "false", "myth", "debunk", "not true", "incorrect", "hoax"
    - **TRUE indicators**: "true", "correct", "verified", "confirm", "accurate"
@@ -149,15 +149,16 @@ The fact checker:
 The fact checker uses:
 
 - **API**: Perplexity Search API
-- **Max results**: 5 search results per claim
+- **Max results**: 2 search results per claim
 - **Max tokens per page**: 1024 (snippet length)
-- **SDK**: `perplexity-sdk` Python package
+- **SDK package**: `perplexityai`
+- **Python import**: `from perplexity import Perplexity`
 
 ## Troubleshooting
 
 ### "perplexity SDK not installed"
 ```bash
-pip install perplexity-sdk
+pip install perplexityai
 ```
 
 ### "No API key found"
@@ -167,7 +168,7 @@ pip install perplexity-sdk
 - Check your API key is valid
 - Verify you have API credits
 - Check network connectivity
-- Ensure you installed `perplexity-sdk` (not `perplexity`)
+- Ensure you installed `perplexityai` and import it with `from perplexity import Perplexity`
 
 ### Claims not being fact-checked
 - Ensure "Enable Perplexity Fact Checking" is checked
@@ -211,7 +212,7 @@ python src/perplexity_fact_checker.py
 
 ## Next Steps
 
-1. Install SDK: `pip install perplexity-sdk`
+1. Install SDK: `pip install perplexityai`
 2. Set your `PERPLEXITY_API_KEY` in `.env`
 3. Run the app: `streamlit run app/app.py`
 4. Test with a sample article

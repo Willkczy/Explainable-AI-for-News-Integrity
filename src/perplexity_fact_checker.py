@@ -18,7 +18,7 @@ try:
     PERPLEXITY_AVAILABLE = True
 except ImportError:
     PERPLEXITY_AVAILABLE = False
-    print("⚠️  Warning: perplexity package not installed. Install with: pip install perplexity")
+    print("⚠️  Warning: perplexity package not installed. Install with: pip install perplexityai")
 
 
 class PerplexityFactChecker:
@@ -48,7 +48,7 @@ class PerplexityFactChecker:
             print("   Fact-checking will be disabled.")
             self.client = None
         elif not PERPLEXITY_AVAILABLE:
-            print("⚠️  Warning: Perplexity package not available. Install with: pip install perplexity")
+            print("⚠️  Warning: Perplexity package not available. Install with: pip install perplexityai")
             self.client = None
         else:
             try:
@@ -299,7 +299,7 @@ def main():
     if not checker.client:
         print("❌ Perplexity client not initialized.")
         print("   Please set PERPLEXITY_API_KEY environment variable.")
-        print("   And install: pip install perplexity")
+        print("   And install: pip install perplexityai")
         return
 
     # Test claims

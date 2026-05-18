@@ -1,220 +1,197 @@
-# Perplexity Fact Checker Integration
+# Perplexity Integration Guide
 
-The Perplexity Search API has been integrated into your News Integrity application for fact-checking claims.
+This project can optionally use the Perplexity Search API to fact-check extracted claims with live web search results and source URLs.
 
-## What Changed
+Perplexity is not required to run the core pipeline. When it is disabled or no API key is provided, the app still runs classification, claim extraction, Wikipedia retrieval, and Gemini explanation.
 
-### ✅ Files Modified
+## Current Role In The Pipeline
 
-1. **[app/app.py](app/app.py)** - Streamlit application
-   - Replaced Google Fact Check API with Perplexity Search API
-   - Added Perplexity API key input in sidebar
-   - Updated fact-check display to show verdicts, explanations, and sources
+Perplexity is used in step 4 of the analysis pipeline:
 
-2. **[src/explainer.py](src/explainer.py)** - LLM Explainer
-   - Enhanced to include Perplexity's detailed explanations and sources in evidence prompts
+```text
+Article -> Classification -> Claim Extraction -> Wikipedia Retrieval -> Perplexity Fact-Checking -> Gemini Explanation
+```
 
-3. **[config/config.py](config/config.py)** - Configuration
-   - Added `PERPLEXITY_API_KEY` environment variable
+The implementation is in `src/perplexity_fact_checker.py` and is called from `app/app.py`.
 
-### ✅ Files Created
+Current behavior:
 
-1. **[src/perplexity_fact_checker.py](src/perplexity_fact_checker.py)** - Core fact checker using Perplexity Search API
+- Uses the Perplexity Search API through the official Python SDK package `perplexityai`
+- Imports the client with `from perplexity import Perplexity`
+- Searches each extracted claim with a fact-check style query
+- Requests 2 search results per claim
+- Uses `max_tokens_per_page=1024`
+- Applies a simple keyword heuristic to label results as `TRUE`, `FALSE`, `PARTIALLY TRUE`, or `UNVERIFIED`
+- Passes the verdict, explanation, and source links into the Gemini explainer
 
-## Setup Instructions
+Because the verdicting step is heuristic, Perplexity results should be treated as supporting evidence, not as a final authoritative truth label.
 
-### 1. Install Perplexity SDK
+## Installation
+
+Install dependencies from the project root:
+
+```bash
+pip install -r requirements.txt
+```
+
+If installing only the Perplexity SDK:
 
 ```bash
 pip install perplexityai
 ```
 
-### 2. Get Perplexity API Key
+The package name is `perplexityai`, but the Python import is:
 
-1. Sign up at [https://www.perplexity.ai/](https://www.perplexity.ai/)
-2. Navigate to API settings
-3. Generate an API key
-
-### 3. Configure Environment Variable
-
-Add to your `.env` file in the project root:
-
-```bash
-PERPLEXITY_API_KEY=your-api-key-here
+```python
+from perplexity import Perplexity
 ```
 
-Or set it temporarily:
+## API Key Setup
+
+Add your API key to `.env`:
 
 ```bash
-# Windows
-set PERPLEXITY_API_KEY=your-api-key-here
-
-# Linux/Mac
-export PERPLEXITY_API_KEY=your-api-key-here
+PERPLEXITY_API_KEY=your-perplexity-api-key-here
 ```
 
-### 4. Run the Application
+You can also paste the key into the Streamlit sidebar at runtime.
+
+The app reads the key in this order:
+
+1. Sidebar input in `app/app.py`
+2. `PERPLEXITY_API_KEY` from the environment or `.env`
+
+## Running In The App
+
+Start the Streamlit app:
+
+```bash
+python run.py
+```
+
+Or:
 
 ```bash
 streamlit run app/app.py
 ```
 
-## How It Works
+In the sidebar:
 
-The fact checker uses the **Perplexity Search API** (not the chat API):
+1. Enter `PERPLEXITY_API_KEY`, or rely on the value from `.env`
+2. Enable `Enable Perplexity Fact Checking`
+3. Run article analysis
 
-```python
-from perplexity import Perplexity
+Perplexity results appear under each extracted claim as fact-check results with source links.
 
-client = Perplexity(api_key="your-api-key")
+## Standalone Test
 
-# Search for fact-check information
-search_results = client.search.create(
-    query=f"Is this claim true or false? Fact-check: {claim}",
-    max_results=2,
-    max_tokens_per_page=1024
-)
-
-# Analyze search results to determine verdict
-for result in search_results.results:
-    print(f"{result.title}: {result.url}")
-```
-
-## Usage
-
-1. **Enter API Key** - In the sidebar, enter your Perplexity API key (or it will auto-load from `.env`)
-
-2. **Enable Fact Checking** - Check the "Enable Perplexity Fact Checking" checkbox
-
-3. **Analyze Article** - Enter title and text, then click "Analyze Article"
-
-4. **View Results** - Each claim will show:
-   - ✅/❌/⚠️/❓ Verdict icon (TRUE/FALSE/PARTIALLY TRUE/UNVERIFIED)
-   - Detailed explanation based on search results
-   - Source citations with URLs
-
-## Output Format
-
-For each claim, the fact checker returns:
-
-```json
-{
-  "claim": "The statement being checked",
-  "verdict": "TRUE | FALSE | PARTIALLY TRUE | UNVERIFIED",
-  "explanation": "Analysis based on search results",
-  "sources": [
-    "Source Title - https://source-url.com",
-    "Another Source - https://another-url.com"
-  ]
-}
-```
-
-Example display:
-
-```
-Claim: ❌ FALSE
-  Statement: "The Great Wall of China is visible from the moon."
-  Explanation: Based on search results from 5 sources, this claim appears
-  to be false. Multiple reliable sources indicate this is a common myth or
-  misconception. Key source: NASA - Myths About the Moon.
-  Sources:
-    - NASA - Myths About the Moon - https://nasa.gov/...
-    - Scientific American - https://scientificamerican.com/...
-    - National Geographic - https://nationalgeographic.com/...
-```
-
-## How Verdicts Are Determined
-
-The fact checker:
-
-1. **Searches** - Uses Perplexity Search API to find relevant web pages
-2. **Extracts** - Gets titles, URLs, and snippets from top 2 results
-3. **Analyzes** - Examines text for keywords indicating truth/falsehood:
-   - **FALSE indicators**: "false", "myth", "debunk", "not true", "incorrect", "hoax"
-   - **TRUE indicators**: "true", "correct", "verified", "confirm", "accurate"
-   - **PARTIAL indicators**: "partially", "misleading", "some truth", "context"
-4. **Determines verdict** - Based on keyword frequency and source credibility
-5. **Generates explanation** - Summarizes findings with source attribution
-
-## Benefits Over Google Fact Check API
-
-- ✅ **Real-time search** - Finds current information, not limited to pre-existing fact-checks
-- ✅ **Broader coverage** - Can check any claim using web search
-- ✅ **Source diversity** - Returns multiple sources with URLs
-- ✅ **No database limitations** - Not restricted to fact-checking databases
-- ✅ **Official SDK** - Uses Perplexity's official Python SDK
-
-## API Configuration
-
-The fact checker uses:
-
-- **API**: Perplexity Search API
-- **Max results**: 2 search results per claim
-- **Max tokens per page**: 1024 (snippet length)
-- **SDK package**: `perplexityai`
-- **Python import**: `from perplexity import Perplexity`
-
-## Troubleshooting
-
-### "perplexity SDK not installed"
-```bash
-pip install perplexityai
-```
-
-### "No API key found"
-- Make sure `PERPLEXITY_API_KEY` is in your `.env` file or entered in the sidebar
-
-### "API request failed"
-- Check your API key is valid
-- Verify you have API credits
-- Check network connectivity
-- Ensure you installed `perplexityai` and import it with `from perplexity import Perplexity`
-
-### Claims not being fact-checked
-- Ensure "Enable Perplexity Fact Checking" is checked
-- Verify API key is entered
-- Check that claims were successfully extracted
-
-## Code Structure
-
-```
-src/
-  perplexity_fact_checker.py  # Uses Perplexity Search API
-  explainer.py                 # Updated to use Perplexity results
-app/
-  app.py                       # Streamlit UI with Perplexity integration
-config/
-  config.py                    # Added PERPLEXITY_API_KEY
-```
-
-## Testing the Integration
-
-Test the fact checker standalone:
-
-```python
-from src.perplexity_fact_checker import PerplexityFactChecker
-
-# Initialize
-checker = PerplexityFactChecker()
-
-# Check a claim
-result = checker.check_claim("Water boils at 100°C at sea level")
-
-# Display result
-print(checker.format_result(result))
-```
-
-Or run the test script:
+Run the fact checker module directly:
 
 ```bash
 python src/perplexity_fact_checker.py
 ```
 
-## Next Steps
+If your environment uses `python3` instead of `python`:
 
-1. Install SDK: `pip install perplexityai`
-2. Set your `PERPLEXITY_API_KEY` in `.env`
-3. Run the app: `streamlit run app/app.py`
-4. Test with a sample article
+```bash
+python3 src/perplexity_fact_checker.py
+```
 
-That's it! Your application now uses the official Perplexity Search API for intelligent fact-checking with source citations.
+## Programmatic Usage
+
+```python
+from src.perplexity_fact_checker import PerplexityFactChecker
+
+checker = PerplexityFactChecker(api_key="your-perplexity-api-key")
+
+results = checker.check_claims([
+    "Water boils at 100 degrees Celsius at sea level.",
+    "The Great Wall of China is visible from the moon."
+])
+
+for result in results:
+    print(result["claim"])
+    print(result["verdict"])
+    print(result["explanation"])
+    print(result["sources"])
+```
+
+## Output Format
+
+Each result is a dictionary:
+
+```json
+{
+  "claim": "The statement being checked",
+  "verdict": "TRUE | FALSE | PARTIALLY TRUE | UNVERIFIED | ERROR",
+  "explanation": "Short analysis generated from search snippets",
+  "sources": [
+    "Source Title - https://source-url.example"
+  ],
+  "detailed_sources": [
+    {
+      "title": "Source Title",
+      "url": "https://source-url.example",
+      "snippet": "Search result snippet"
+    }
+  ]
+}
+```
+
+In the Streamlit pipeline, these results are converted into the format expected by `LLMExplainer`.
+
+## Verdict Heuristic
+
+The current implementation combines snippets from the top search results and checks for indicator words:
+
+- `FALSE`: words such as `false`, `myth`, `debunk`, `not true`, `incorrect`, `wrong`, `fake`, `hoax`
+- `TRUE`: words such as `true`, `correct`, `verified`, `confirm`, `accurate`, `fact`
+- `PARTIALLY TRUE`: words such as `partially`, `partly`, `some truth`, `misleading`, `context`
+- `UNVERIFIED`: used when the retrieved snippets do not strongly indicate one of the above
+
+This is intentionally simple and should be improved before treating verdicts as production-grade fact-check labels.
+
+## Troubleshooting
+
+### Import Error
+
+If you see an error that the Perplexity package is not available:
+
+```bash
+pip install perplexityai
+```
+
+Remember that the installed package is `perplexityai`, while the import path is `perplexity`.
+
+### Missing API Key
+
+Make sure one of these is true:
+
+- `PERPLEXITY_API_KEY` is set in `.env`
+- The key is entered in the Streamlit sidebar
+
+### Fact-Checking Does Not Run
+
+Check that:
+
+- `Enable Perplexity Fact Checking` is enabled in the sidebar
+- Claims were extracted successfully
+- A Perplexity API key is available
+- The Perplexity SDK is installed
+
+### API Request Failed
+
+Check:
+
+- API key validity
+- API credits or billing status
+- Network connectivity
+- Perplexity service status
+
+## Related Files
+
+- `src/perplexity_fact_checker.py`: Perplexity API wrapper and verdict heuristic
+- `app/app.py`: Sidebar key input, toggle, and pipeline integration
+- `src/explainer.py`: Incorporates Perplexity results into the final Gemini explanation
+- `config/config.py`: Defines `PERPLEXITY_API_KEY`
+- `.env.example`: Shows expected environment variable setup

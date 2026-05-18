@@ -28,7 +28,7 @@ The pipeline analyzes news articles through multiple AI-powered stages:
 
 ## 🛠️ Tech Stack
 
-- **Language**: Python 3.12+
+- **Language**: Python 3.12 for local development (`.python-version` / `pyproject.toml`)
 - **Web Framework**: [Streamlit](https://streamlit.io/)
 - **ML Framework**: PyTorch, Transformers (Hugging Face)
 - **Classifier**: RoBERTa-base fine-tuned for fake news detection
@@ -83,13 +83,15 @@ Explainable-AI-for-News-Integrity/
 
 ### Prerequisites
 
-- Python 3.12 or higher
-- **API Keys** (all free tier available):
-  - [Google Gemini API](https://aistudio.google.com/app/apikey) - for explanations (required)
-  - [Groq API](https://console.groq.com/keys) - for claim extraction (optional, improves quality)
-  - [Perplexity API](https://www.perplexity.ai/settings/api) - for fact-checking (optional)
+- Python 3.12 for local development
+- API keys:
+  - [Google Gemini API](https://aistudio.google.com/app/apikey) - needed for Gemini-powered explanations
+  - [Groq API](https://console.groq.com/keys) - needed for Simple and Claimify claim extraction
+  - [Perplexity API](https://www.perplexity.ai/settings/api) - optional, enables web-search fact-checking
 - Pre-trained RoBERTa model for fake news detection
 - Wikipedia vector database (ChromaDB or PostgreSQL)
+
+Runtime note: the project is configured for Python 3.12 locally, while the current `Dockerfile` uses `python:3.11` for Cloud Run.
 
 ### Installation
 
@@ -103,13 +105,18 @@ pip install -r requirements.txt
 
 # 3. Set up environment variables
 cp .env.example .env
-# Edit .env and add your API keys:
-#   - GEMINI_API_KEY (required)
-#   - GROQ_API_KEY (optional)
-#   - PERPLEXITY_API_KEY (optional)
+# For local ChromaDB development, keep USE_POSTGRES=false.
+# Add API keys as needed:
+#   - GEMINI_API_KEY for Gemini explanations
+#   - GROQ_API_KEY for claim extraction
+#   - PERPLEXITY_API_KEY for optional Perplexity fact-checking
 ```
 
-### Setup Required Data
+If you are using Cloud SQL/PostgreSQL instead of local ChromaDB, set `USE_POSTGRES=true` and fill in the `POSTGRES_*` values in `.env`.
+
+### Setup Required Local Data
+
+The trained classifier model and Wikipedia vector database are not tracked in git.
 
 #### 1. Wikipedia Vector Database
 ```bash
@@ -138,6 +145,8 @@ streamlit run app/app.py
 The app will open in your browser at `http://localhost:8501`
 
 ### Testing Individual Modules
+
+These commands are useful for focused debugging. Some modules require local model/database files or API keys.
 
 ```bash
 # Test fake news classifier
@@ -292,10 +301,11 @@ This project supports deployment to Google Cloud Run with PostgreSQL and GCS vol
 ### Key Features
 - Auto-detects Cloud Run environment (`K_SERVICE` env var)
 - Automatically uses appropriate paths for models and databases
-- Falls back to ChromaDB for local development
+- Uses ChromaDB for local development when `USE_POSTGRES=false`
+- Uses PostgreSQL + pgvector when `USE_POSTGRES=true` and `POSTGRES_*` credentials are configured
 - Supports both local and cloud configurations in single codebase
 
-See recent commits for deployment configuration details.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the local/cloud configuration matrix and deployment details.
 
 ## 👥 Team
 
@@ -327,3 +337,4 @@ This project is for educational purposes.
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture and integration details
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Development guidelines and workflow
+- [PERPLEXITY_SETUP.md](PERPLEXITY_SETUP.md) - Perplexity Search API integration guide

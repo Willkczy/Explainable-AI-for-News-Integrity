@@ -79,7 +79,7 @@ Final Verdict with Sources
 - **Function**: Scalable semantic search for cloud deployment
 - **Use Case**: Production deployment on Cloud SQL
 - **Features**:
-  - Connection pooling for Cloud SQL
+  - Direct psycopg2 connection to Cloud SQL/PostgreSQL
   - Efficient vector similarity search using pgvector
 - **Returns**: Top-k relevant Wikipedia passages with sources
 
@@ -131,7 +131,7 @@ Final Verdict with Sources
   - `GEMINI_API_KEY`: Google Gemini 2.5 Flash for explanations
   - `GROQ_API_KEY`: Groq Llama 3.1 for claim extraction
   - `PERPLEXITY_API_KEY`: Perplexity for fact-checking
-  - `GOOGLE_FACTCHECK_API_KEY`: (Optional) Google Fact Check API
+  - `GOOGLE_FACTCHECK_API_KEY`: Legacy setting, currently unused by the Streamlit app
 - **Model Paths**: Environment-aware path selection
   - `DETECTOR_MODEL_PATH`: Auto-detects Cloud Run (`/mnt/gcs/models/`) vs local (`./models/`)
   - `SENTENCE_TRANSFORMER_PATH`: Auto-detects Cloud Run vs local
@@ -144,15 +144,19 @@ Final Verdict with Sources
   - `CLOUD_RETRIEVER_URL`: Optional remote retriever API
 - **Application Settings**:
   - `DEFAULT_EXTRACTOR_MODE`: "simple" or "claimify"
-  - `MAX_CLAIMS_PER_ARTICLE`: Claim extraction limit
+  - `MAX_CLAIMS_PER_ARTICLE`: Configured claim extraction limit
   - `MAX_EVIDENCE_PER_CLAIM`: Wikipedia results per claim
   - `CLAIMIFY_MAX_SENTENCES`: Sentences to process in Claimify mode
+
+Note: `app/app.py` currently passes `max_claims=5` directly to both extractor modes, so the UI behavior is capped at 5 claims even though `MAX_CLAIMS_PER_ARTICLE` defaults to 10 in configuration.
 
 #### [.env.example](.env.example)
 - **Template** for environment variables
 - **Required**: GEMINI_API_KEY
 - **Optional**: GROQ_API_KEY, PERPLEXITY_API_KEY
 - **Paths**: Model and database path overrides
+- **Local default**: `USE_POSTGRES=false` to use ChromaDB during local development
+- **Cloud default**: set `USE_POSTGRES=true` when PostgreSQL + pgvector credentials are available
 
 ### 4. Project Structure
 
@@ -221,6 +225,19 @@ streamlit run app/app.py
 The system automatically detects its runtime environment using the `K_SERVICE` environment variable:
 - **Cloud Run**: Uses GCS-mounted paths (`/mnt/gcs/models/`)
 - **Local**: Uses relative paths (`./models/`, `./data/`)
+
+### Runtime Configuration Matrix
+
+| Setting | Local development | Cloud Run / production |
+|---------|-------------------|------------------------|
+| Runtime signal | `K_SERVICE` unset | `K_SERVICE` set by Cloud Run |
+| Detector model path | `./models/checkpoint_roberta` | `/mnt/gcs/models/checkpoint_roberta` |
+| Sentence transformer path | `sentence-transformers/all-MiniLM-L6-v2` | `/mnt/gcs/models/all-MiniLM-L6-v2` |
+| Evidence backend | ChromaDB recommended | PostgreSQL + pgvector recommended |
+| Retrieval toggle | `USE_POSTGRES=false` | `USE_POSTGRES=true` |
+| Required local data | `data/chroma_db_wiki/` and `models/checkpoint_roberta/` | GCS-mounted models and Cloud SQL credentials |
+
+The code-level fallback in `config/config.py` currently sets `USE_POSTGRES=true` if the variable is missing. Local developers should set `USE_POSTGRES=false` in `.env` unless they have PostgreSQL credentials configured.
 
 ### Cloud Components
 
@@ -306,27 +323,41 @@ python src/perplexity_fact_checker.py
 
 ### Perplexity API
 - **Purpose**: Real-time web search fact-checking
-- **Model**: llama-3.1-sonar-small-128k-online
+- **API**: Perplexity Search API via the `perplexityai` Python SDK
 - **Features**: Web search integration, source citations
 - **Output**: Verdict with evidence snippets and URLs
 - **Rate Limits**: Pay-per-use pricing
 
 ## Data Flow
 
-```
-User Input (Title + Text)
-    ↓
-FakeNewsDetector.classify()
-    ↓
-ClaimExtractor.extract() or ClaimifyExtractor.extract()
-    ↓
-WikiRetriever.search_claims() or WikiRetrieverPG.search_claims()
-    ↓
-PerplexityFactChecker.check_claims() [Optional]
-    ↓
-LLMExplainer.generate_explanation()
-    ↓
-Structured Result (Verdict + Explanation + Evidence)
+The Streamlit app normalizes extracted claims into plain strings before retrieval and explanation:
+
+```python
+classification, confidence = detector.classify(text)
+
+if extractor_mode == "simple":
+    rich_claims = extractor.extract(text, max_claims=5)
+    claims = [claim.text for claim in rich_claims]
+else:
+    result = extractor.extract(text, max_claims=5, max_sentences=max_sentences)
+    claims = result.claims
+
+wikipedia_evidence = retriever.search_claims(claims, top_k=max_evidence)
+
+fact_check_results = {}
+if enable_factcheck and perplexity_key:
+    perplexity_results = fact_checker.check_claims(claims)
+    # Converted to the format expected by LLMExplainer.
+
+explanation = explainer.generate_explanation(
+    title=title,
+    text=text,
+    classification=classification,
+    confidence=confidence,
+    claims=claims,
+    wikipedia_evidence=wikipedia_evidence,
+    fact_check_results=fact_check_results
+)
 ```
 
 ## Team Contributions

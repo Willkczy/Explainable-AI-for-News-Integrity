@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file gives Claude Code quick working context for this repository. Keep this file short and operational; use the project docs below as the source of truth for detailed architecture and setup.
+This file gives Codex quick working context for this repository. Keep this file short and operational; use the project docs below as the source of truth for detailed architecture and setup.
 
 ## Source Of Truth
 

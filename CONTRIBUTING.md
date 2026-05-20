@@ -179,7 +179,11 @@ pip install -r requirements.txt
 
 # Set up environment
 cp .env.example .env
-# Add your GEMINI_API_KEY and other configurations to .env
+# For local ChromaDB development, keep USE_POSTGRES=false.
+# Add API keys as needed:
+#   - GEMINI_API_KEY for Gemini explanations
+#   - GROQ_API_KEY for claim extraction
+#   - PERPLEXITY_API_KEY for optional Perplexity fact-checking
 
 # Build required data (first time only)
 # 1. Run Wikipedia database notebook
@@ -192,7 +196,10 @@ jupyter notebook notebooks/fake_news_classification.ipynb
 python src/classifier.py
 python src/explainer.py
 python src/extractor.py
+python src/extractor_claimify.py
 python src/retriever.py
+python src/retriever_pg.py
+python src/perplexity_fact_checker.py
 
 # Run the application
 python run.py
@@ -212,13 +219,16 @@ Explainable-AI-for-News-Integrity/
 │   ├── classifier.py      # FakeNewsDetector class
 │   ├── explainer.py       # LLMExplainer class
 │   ├── extractor.py       # ClaimExtractor class
-│   └── retriever.py       # WiliRetriever class
+│   ├── extractor_claimify.py
+│   ├── retriever.py       # WikiRetriever class (ChromaDB)
+│   ├── retriever_pg.py    # WikiRetrieverPG class (PostgreSQL + pgvector)
+│   └── perplexity_fact_checker.py
 ├── config/                # Configuration
 │   └── config.py          # Centralized settings
 ├── notebooks/             # Jupyter notebooks
 │   ├── Big_data_WikiDB.ipynb
 │   ├── fake_news_classification.ipynb
-│   └── EDA_and_preprocessing.ipynb
+│   └── fake_news_EDA&Preprocessing.ipynb
 └── run.py                 # Application launcher
 ```
 
@@ -228,8 +238,11 @@ Explainable-AI-for-News-Integrity/
 |--------|---------|-------|
 | `src/classifier.py` | Fake news classification (RoBERTa) | Jack |
 | `src/explainer.py` | AI explanation generation (Gemini) | Jack |
-| `src/extractor.py` | Claim extraction from articles | Hung |
-| `src/retriever.py` | Wikipedia evidence retrieval | Hung |
+| `src/extractor.py` | Simple claim extraction from articles | Hung |
+| `src/extractor_claimify.py` | 3-stage Claimify extraction | Hung |
+| `src/retriever.py` | Local Wikipedia evidence retrieval via ChromaDB | Hung |
+| `src/retriever_pg.py` | Cloud SQL/PostgreSQL retrieval via pgvector | Hung |
+| `src/perplexity_fact_checker.py` | Perplexity Search API fact-checking | Jack |
 | `app/app.py` | Streamlit web interface | Jack |
 | `config/config.py` | Configuration management | Shared |
 | `notebooks/` | Data processing & model training | Shared |
@@ -248,7 +261,7 @@ Explainable-AI-for-News-Integrity/
 1. Create your module in `src/your_module.py`
 2. Import config values from `config.config`
 3. Add your class/functions with proper docstrings
-4. Export it in `src/__init__.py`
+4. Export it in `src/__init__.py` if it should be part of the public package interface
 5. Add tests by running the module directly
 6. Import and use in `app/app.py` if needed
 

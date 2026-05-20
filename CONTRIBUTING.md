@@ -116,7 +116,7 @@ git branch -d feature/your-feature-name
 
 Use clear titles with prefixes:
 ```
-[Feature] Add Google Fact Check API integration
+[Feature] Improve Perplexity fact-checking results
 [Bug] Extractor returns empty list for valid articles
 [Docs] Update README with usage examples
 ```
@@ -143,7 +143,7 @@ Brief description of the issue or feature.
 
 Same as commit messages:
 ```
-feat: add Google Fact Check API integration
+feat: improve Perplexity fact-checking results
 ```
 
 ### PR Description Template

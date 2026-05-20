@@ -96,7 +96,7 @@ Final Verdict with Sources
 
 #### [src/__init__.py](src/__init__.py)
 - **Exports**: All core modules for clean imports
-- **Usage**: `from src import FakeNewsDetector, LLMExplainer, ClaimExtractor, etc.`
+- **Usage**: `from src import FakeNewsDetector, LLMExplainer, ClaimExtractor, WikiRetriever, WikiRetrieverPG, PerplexityFactChecker`
 
 ### 2. Application Layer
 

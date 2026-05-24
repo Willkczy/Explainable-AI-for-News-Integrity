@@ -19,12 +19,11 @@ GEMINI_MODEL_NAME = "gemini-2.5-flash"
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL_NAME = "llama-3.1-8b-instant"
 
-# Google Fact Check API
+# Google Fact Check API (legacy, currently unused by the Streamlit app)
 GOOGLE_FACTCHECK_API_KEY = os.getenv("GOOGLE_FACTCHECK_API_KEY", "")
 
-# Perplexity API (for Fact Checking)
+# Perplexity API (for web-search fact-checking)
 PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY", "")
-PERPLEXITY_MODEL = "llama-3.1-sonar-small-128k-online"
 
 # =============================================================================
 # Model Paths
